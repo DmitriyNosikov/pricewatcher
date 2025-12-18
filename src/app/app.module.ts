@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { WinstonModule } from 'nest-winston';
 
 import { ENV_FILE_PATH } from './app.constant';
-import { appConfig, jwtConfig, pgConfig, telegramConfig } from './config';
-import { WinstonModule } from 'nest-winston';
+import { appConfig, ConfigEnvironment, jwtConfig, pgConfig, telegramConfig } from './config';
 import { getLoggerOption } from './config/logger-options';
+import { getDbOPtions } from './config/db-options';
+
+import { TelegramBotModule } from './modules/telegram-bot/telegram-bot.module';
 
 @Module({
   imports: [
@@ -22,7 +26,17 @@ import { getLoggerOption } from './config/logger-options';
     }),
 
     // Конфигурация кастомного логгера (winston)
-    WinstonModule.forRootAsync(getLoggerOption()),
+    WinstonModule.forRootAsync(
+      getLoggerOption()
+    ),
+
+    // Конфигурация подключения к БД
+    SequelizeModule.forRootAsync(
+      getDbOPtions(ConfigEnvironment.PG)
+    ),
+
+    // Модуля
+    TelegramBotModule
   ],
   controllers: [],
   providers: [],

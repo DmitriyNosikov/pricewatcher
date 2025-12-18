@@ -1,21 +1,31 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app/app.module';
-import { ConfigEnum, ConfigEnvironment } from '@core/config';
+import { ConfigEnum, ConfigEnvironment, TelegramConfigEnum } from '@core/config';
 import { ENV_NAME, GLOBAL_API_PREFIX } from '@core/app.constant';
-import { Logger, ValidationPipe } from '@nestjs/common';
+
 import { RequestLoggerInterceptor } from '@core/interceptors';
+import { TelegramBotService } from '@core/modules/telegram-bot/telegram-bot.service';
+import { removeMultipleSlashes, removeStartingSlash, removeTrailingSlash } from '@core/utils/url';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: true,
   });
+  // Сервисы
   const configService = app.get(ConfigService);
+  const telegramBotService = app.get(TelegramBotService);
 
+  // Сервер
   const host = configService.get(`${ConfigEnvironment.APP}.${ConfigEnum.HOST}`);
   const port = configService.get(`${ConfigEnvironment.APP}.${ConfigEnum.PORT}`);
   const env = configService.get(ENV_NAME) || undefined;
+
+  // Телеграм-бот
+  const telegramWebhookDomain = configService.get(`${ConfigEnvironment.TELEGRAM}.${TelegramConfigEnum.TELEGRAM_WEBHOOK_DOMAIN}`);
+  const telegramWebhookPath = configService.get(`${ConfigEnvironment.TELEGRAM}.${TelegramConfigEnum.TELEGRAM_WEBHOOK_PATH}`);
 
   const corsEnabledURLs = configService
     .get(`${ConfigEnvironment.APP}.${ConfigEnum.CORS_ACCESS_ENABLED_URLS}`)
@@ -41,6 +51,25 @@ async function bootstrap() {
 
   // Логирование входящих запросов
   app.useGlobalInterceptors(new RequestLoggerInterceptor());
+
+  // Инициализация Telegram Bot
+  telegramBotService.init();
+
+  const telegramBot = telegramBotService.getBot();
+  const telegramWebhookDomainURL = `${removeTrailingSlash(telegramWebhookDomain)}/${GLOBAL_API_PREFIX}`;
+  const telegramWebhookPathURL = `/${removeStartingSlash(telegramWebhookPath)}`;
+  const telegramWebhookURL = removeMultipleSlashes(`${telegramWebhookDomainURL}${telegramWebhookPathURL}`);
+
+  const telegramBotWebhook = await telegramBot?.createWebhook({
+    domain: telegramWebhookDomainURL,
+    path: telegramWebhookPathURL,
+  });
+
+  // Подключаем webhook middleware без указания пути, так как путь уже указан в createWebhook
+  app.use(telegramBotWebhook);
+
+  Logger.log(`🤖 Telegram webhook настроен на: ${telegramWebhookURL}`);
+  Logger.log(`📝 Убедитесь, что в настройках Telegram Bot указан URL: ${telegramWebhookURL}`);
 
   // Запуск сервера
   await app.listen(port);

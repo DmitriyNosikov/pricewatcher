@@ -1,0 +1,30 @@
+# Commands:
+# Compose (prod): docker compose --file=./docker-compose.yml --project-name "price-watcher" --env-file=./.env up -d
+# Compose (dev): docker compose --file=./docker-compose.yml --project-name "price-watcher" --env-file=./.env.dev up -d
+# Healthcheck: docker inspect price-watcher.postgres --format='{{.State.Health}}'
+
+version: '3.9'
+services:
+  price-watcher.postgres:
+    image: postgres:14-alpine
+    # restart: always # Авторестарт контейнера
+    container_name: price-watcher
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - price-watcher:/data/postgresql
+
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  price-watcher:
