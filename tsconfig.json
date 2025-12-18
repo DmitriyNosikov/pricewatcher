@@ -20,6 +20,15 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@core/*": ["./src/app/*"],
+      "@models/*": ["./src/app/db/models/*"],
+      "@modules/*": ["./src/app/modules/*"],
+      "@services/*": ["./src/app/services/*"],
+      "@api/*": ["./src/app/api/*"],
+      "@utils/*": ["./src/app/utils/*"],
+      "@logs/*": ["./src/app/logs/*"],
+    }
   }
 }
