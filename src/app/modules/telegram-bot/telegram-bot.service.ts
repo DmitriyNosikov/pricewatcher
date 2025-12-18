@@ -38,7 +38,7 @@ export class TelegramBotService {
     this.logger.info(`Получена команда /start`);
 
     const telegramInitiatorId = this.getTelegramId(ctx);
-
+    const startPayload = ctx.payload;
     console.log('CONTEXT: ', ctx);
   }
 
@@ -52,9 +52,7 @@ export class TelegramBotService {
     }
 
     // Назначаем обработчик для команды /start
-    this.telegramBot.start(async (ctx) => {
-      console.log(ctx);
-    });
+    this.telegramBot.start(this.handleStartCommand.bind(this));
 
     // Enable graceful stop
     process.once("SIGINT", () => this.telegramBot?.stop("SIGINT"));

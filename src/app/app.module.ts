@@ -9,6 +9,7 @@ import { getLoggerOption } from './config/logger-options';
 import { getDbOPtions } from './config/db-options';
 
 import { TelegramBotModule } from './modules/telegram-bot/telegram-bot.module';
+import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { TelegramBotModule } from './modules/telegram-bot/telegram-bot.module';
     ),
 
     // Модуля
+    WebhookModule,
     TelegramBotModule
   ],
   controllers: [],
