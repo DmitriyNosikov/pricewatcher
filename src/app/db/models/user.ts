@@ -1,22 +1,8 @@
 import { CreationOptional, InferAttributes, InferCreationAttributes } from 'sequelize';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
-export const UserRoleEnum = {
-  ADMIN: 'ADMIN',
-  MANAGER: 'MANAGER',
-  USER: 'USER',
-} as const;
-
-export type UserRolesType = (typeof UserRoleEnum)[keyof typeof UserRoleEnum];
-
-export const UserStatusEnum = {
-  ACTIVE: 'ACTIVE',
-  DISABLED: 'DISABLED',
-  BANNED: 'BANNED',
-  DELETED: 'DELETED'
-} as const;
-
-export type UserStatusType = (typeof UserStatusEnum)[keyof typeof UserStatusEnum];
+import { UserRoleEnum, UserRolesType } from '@core/modules/user/types/user-role.type';
+import { UserStatusEnum, UserStatusType } from '@core/modules/user/types/user-status.type';
 
 export interface UserInterface extends Model<
   InferAttributes<UserInterface>,
@@ -26,12 +12,13 @@ export interface UserInterface extends Model<
   name: string;
   email: string | null;
   phone: number | null;
-  telegramId: number | null;
+  telegramId: number;
   role: UserRolesType;
   status: UserStatusType;
 }
 
 @Table({
+  tableName: 'users',
   paranoid: true
 })
 export class User extends Model<UserInterface> {
@@ -42,25 +29,22 @@ export class User extends Model<UserInterface> {
   })
   id: CreationOptional<number>;
 
-  @Column({ type: DataType.INTEGER, allowNull: true, unique: true })
-  crmUserId: number;
-
-  @Column({ type: DataType.TEXT, allowNull: true })
+  @Column({ type: DataType.STRING, allowNull: true })
   name: string;
 
-  @Column({ type: DataType.TEXT, allowNull: true })
+  @Column({ type: DataType.STRING, unique: true, allowNull: true })
   email: string | null;
 
-  @Column({ type: DataType.TEXT, allowNull: true })
+  @Column({ type: DataType.STRING, allowNull: true })
   phone: string | null;
 
-  @Column({ type: DataType.INTEGER, allowNull: true })
+  @Column({ type: DataType.INTEGER, unique: true, allowNull: false })
   telegramId: number;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, defaultValue: UserRoleEnum.USER })
   role: UserRolesType;
 
-  @Column({ type: DataType.ENUM, allowNull: false, defaultValue: 'ACTIVE' })
+  @Column({ type: DataType.STRING, defaultValue: UserStatusEnum.DISABLED })
   status: UserStatusType;
 }
 

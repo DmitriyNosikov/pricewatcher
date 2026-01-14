@@ -1,1 +1,1 @@
-export { User, UserRoleEnum, UserRolesType } from './user'
+export { User } from './user'

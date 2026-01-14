@@ -1,26 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Order, WhereOptions } from 'sequelize';
+
 import { User } from '@core/db/models';
-import { UserInterface } from '@core/db/models/user';
-
-// TODO:
-// Выенсти в отдельные типы
-// Избавиться от "магических" значений
-type IndexOptionsType = {
-  where?: WhereOptions<UserInterface>,
-  limit?: number,
-  offset?: number,
-  order?: Order,
-}
-
-const defaultIndexOptions: IndexOptionsType = {
-  limit: 100,
-  offset: 0,
-  order: [
-    ['id', 'DESC']
-  ]
-};
+import { IndexUserDTO } from './dto/index-user.dto';
+import { CreateUserDTO } from './dto/create-user.dto';
 
 @Injectable()
 export class UserReposiroty {
@@ -28,22 +11,33 @@ export class UserReposiroty {
     @InjectModel(User)
     private readonly userModel: typeof User
   ) { }
+  public async createUser(data: CreateUserDTO): Promise<User> {
+    const user = await this.userModel.create(data);
 
-  private async index(
-    options: IndexOptionsType = defaultIndexOptions
+    return user;
+  }
+
+  public async countUsers(): Promise<number> {
+    const usersCount = await this.userModel.count();
+
+    return usersCount;
+  }
+
+  public async index(
+    options: IndexUserDTO
   ): Promise<User[] | null> {
     const users = await this.userModel.findAll(options);
 
     return users;
   }
 
-  private async findById(userId: number): Promise<User | null> {
+  public async findById(userId: number): Promise<User | null> {
     const user = await this.userModel.findByPk(userId);
 
     return user;
   }
 
-  private async findByEmail(email: string): Promise<User | null> {
+  public async findByEmail(email: string): Promise<User | null> {
     const user = await this.userModel.findOne({
       where: { email }
     });
@@ -51,7 +45,7 @@ export class UserReposiroty {
     return user;
   }
 
-  private async findByPhone(phone: string): Promise<User | null> {
+  public async findByPhone(phone: string): Promise<User | null> {
     const user = await this.userModel.findOne({
       where: { phone }
     });
@@ -59,7 +53,7 @@ export class UserReposiroty {
     return user;
   }
 
-  private async findByTelegramId(telegramId: string): Promise<User | null> {
+  public async findByTelegramId(telegramId: string): Promise<User | null> {
     const user = await this.userModel.findOne({
       where: { telegramId }
     });
@@ -67,13 +61,13 @@ export class UserReposiroty {
     return user;
   }
 
-  private async softDelete(userId: number): Promise<void> {
+  public async softDelete(userId: number): Promise<void> {
     await this.userModel.destroy({
       where: { id: userId }
     })
   }
 
-  private async hardDelete(userId: number): Promise<void> {
+  public async hardDelete(userId: number): Promise<void> {
     await this.userModel.destroy({
       where: { id: userId },
       force: true
