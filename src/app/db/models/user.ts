@@ -9,11 +9,14 @@ export const UserRoleEnum = {
 
 export type UserRolesType = (typeof UserRoleEnum)[keyof typeof UserRoleEnum];
 
-export const USER_ROLE_VALUES: UserRolesType[] = [
-  UserRoleEnum.ADMIN,
-  UserRoleEnum.MANAGER,
-  UserRoleEnum.USER,
-];
+export const UserStatusEnum = {
+  ACTIVE: 'ACTIVE',
+  DISABLED: 'DISABLED',
+  BANNED: 'BANNED',
+  DELETED: 'DELETED'
+} as const;
+
+export type UserStatusType = (typeof UserStatusEnum)[keyof typeof UserStatusEnum];
 
 export interface UserInterface extends Model<
   InferAttributes<UserInterface>,
@@ -22,12 +25,15 @@ export interface UserInterface extends Model<
   id: number;
   name: string;
   email: string | null;
+  phone: number | null;
   telegramId: number | null;
   role: UserRolesType;
-  isActive: boolean;
+  status: UserStatusType;
 }
 
-@Table({})
+@Table({
+  paranoid: true
+})
 export class User extends Model<UserInterface> {
   @Column({
     type: DataType.INTEGER,
@@ -45,8 +51,8 @@ export class User extends Model<UserInterface> {
   @Column({ type: DataType.TEXT, allowNull: true })
   email: string | null;
 
-  @Column({ type: DataType.TEXT, allowNull: true, field: 'amojo_id' })
-  amojoId: string | null;
+  @Column({ type: DataType.TEXT, allowNull: true })
+  phone: string | null;
 
   @Column({ type: DataType.INTEGER, allowNull: true })
   telegramId: number;
@@ -54,8 +60,8 @@ export class User extends Model<UserInterface> {
   @Column({ type: DataType.STRING, allowNull: false })
   role: UserRolesType;
 
-  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
-  isActive: boolean;
+  @Column({ type: DataType.ENUM, allowNull: false, defaultValue: 'ACTIVE' })
+  status: UserStatusType;
 }
 
 
