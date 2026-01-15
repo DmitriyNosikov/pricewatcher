@@ -38,7 +38,7 @@ export class TelegramBotService {
     this.logger.info(`Получена команда /start`);
 
     const telegramInitiatorId = this.getTelegramId(ctx);
-    const startPayload = ctx.payload;
+    // const startPayload = ctx.payload;
     console.log('CONTEXT: ', ctx);
   }
 

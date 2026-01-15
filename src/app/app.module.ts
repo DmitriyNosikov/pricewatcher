@@ -10,6 +10,7 @@ import { getDbOPtions } from './config/db-options';
 
 import { TelegramBotModule } from './modules/telegram-bot/telegram-bot.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -36,9 +37,10 @@ import { WebhookModule } from './modules/webhook/webhook.module';
       getDbOPtions(ConfigEnvironment.PG)
     ),
 
-    // Модуля
+    // Модули
     WebhookModule,
-    TelegramBotModule
+    TelegramBotModule,
+    UserModule
   ],
   controllers: [],
   providers: [],

@@ -1,4 +1,4 @@
-import { UserRolesType } from '@core/db/models';
+import { UserRolesType } from '@core/modules/user/types/user-role.type';
 
 export const TelegramBotComamndNameEnum = {
   START: 'start',

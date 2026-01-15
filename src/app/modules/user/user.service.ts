@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { FindOptions } from 'sequelize';
 import { Logger } from 'winston';
 
@@ -9,6 +9,7 @@ import { IndexUserDTO } from './dto/index-user.dto';
 import { WithPaginationType } from '@core/types/with-pagination.type.';
 import { UserLimits } from './user.constant';
 import { OrderDirectionEnum } from '@core/types/search.type';
+import { CreateUserDTO } from './dto/create-user.dto';
 
 const { LIMIT, OFFSET } = UserLimits;
 
@@ -18,6 +19,48 @@ export class UserService {
     private readonly logger: Logger = new Logger(),
     private readonly userRepository: UserReposiroty
   ) { }
+  /*
+    TODO:
+    Пока Telegram является основной платформой
+    для взаимодействия с сервисом - регаем юзеров
+    по TelegramId, соответственно, уникальность
+    пользователей отслеживаем также по нему
+  */
+  public async createUser(data: CreateUserDTO): Promise<User> {
+    this.logger.info(`Регистрация нового пользователя с данными: ${data}`);
+
+    if (!data.telegramId) {
+      const errorMessage = `Ошибка при создании пользователя. Не передан параметр telegramId: ${data.telegramId}`;
+
+      this.logger.error(errorMessage);
+
+      throw new BadRequestException(errorMessage);
+    }
+
+    const isUserExists = await this.userRepository.findByTelegramId(data.telegramId);
+
+    if (isUserExists) {
+      const errorMessage = `Пользователь с telegramId ${data.telegramId} уже заренистрирован в системе`;
+
+      this.logger.error(errorMessage);
+
+      throw new ConflictException(errorMessage);
+    }
+
+    try {
+      const user = await this.userRepository.createUser(data);
+
+      this.logger.info(`Пользоватеь ${user.id} успешно зарегистрирован`);
+
+      return user;
+    } catch (error) {
+      const errorMessage = `Не удалось зарегистрировать пользователя. Ошибка: ${error}`;
+
+      this.logger.error(errorMessage);
+
+      throw new BadRequestException(errorMessage);
+    }
+  }
 
   public async index(options: IndexUserDTO): Promise<WithPaginationType<User>> {
     const orderBy = options.orderBy ? options.orderBy : 'id';
@@ -53,5 +96,13 @@ export class UserService {
     this.logger.info(`Найдено пользователей (ответ сервера): ${response}`);
 
     return response;
+  }
+
+  public async deleteUser(userId: number): Promise<void> {
+    this.logger.info(`Удаление (soft) пользователя с id ${userId}`);
+
+    await this.userRepository.softDelete(userId);
+
+    this.logger.info(`Пользователь с id ${userId} успешно удален (soft)`);
   }
 }

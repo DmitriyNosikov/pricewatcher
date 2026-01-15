@@ -12,6 +12,8 @@ export class UserReposiroty {
     private readonly userModel: typeof User
   ) { }
   public async createUser(data: CreateUserDTO): Promise<User> {
+    // FIXME: Непонятное несоответствие типов
+    //@ts-expect-error
     const user = await this.userModel.create(data);
 
     return user;
@@ -53,7 +55,7 @@ export class UserReposiroty {
     return user;
   }
 
-  public async findByTelegramId(telegramId: string): Promise<User | null> {
+  public async findByTelegramId(telegramId: number): Promise<User | null> {
     const user = await this.userModel.findOne({
       where: { telegramId }
     });

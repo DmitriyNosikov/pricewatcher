@@ -10,15 +10,14 @@ export interface UserInterface extends Model<
 > {
   id: number;
   name: string;
-  email: string | null;
-  phone: number | null;
+  email: string;
+  phone: string;
   telegramId: number;
   role: UserRolesType;
   status: UserStatusType;
 }
 
 @Table({
-  tableName: 'users',
   paranoid: true
 })
 export class User extends Model<UserInterface> {
@@ -29,14 +28,14 @@ export class User extends Model<UserInterface> {
   })
   id: CreationOptional<number>;
 
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({ type: DataType.STRING })
   name: string;
 
-  @Column({ type: DataType.STRING, unique: true, allowNull: true })
-  email: string | null;
+  @Column({ type: DataType.STRING, unique: true })
+  email: string;
 
-  @Column({ type: DataType.STRING, allowNull: true })
-  phone: string | null;
+  @Column({ type: DataType.STRING, unique: true })
+  phone: string;
 
   @Column({ type: DataType.INTEGER, unique: true, allowNull: false })
   telegramId: number;

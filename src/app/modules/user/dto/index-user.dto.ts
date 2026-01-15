@@ -9,7 +9,7 @@ const { LIMIT, OFFSET } = UserLimits;
 export class IndexUserDTO {
   @IsObject()
   @IsOptional()
-  public where?: WhereOptions<UserInterface>,
+  public where?: WhereOptions<UserInterface>;
 
   @Max(LIMIT.MAX)
   @Min(LIMIT.MIN)

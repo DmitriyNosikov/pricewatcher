@@ -1,6 +1,6 @@
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { UserRoleEnum, UserRolesType, UserRoleValues } from '../types/user-role.type';
-import { UserStatusEnum, UserStatusType, UserStatusValues } from '../types/user-status.type';
+import { IsIn, IsInt, IsOptional, IsString } from 'class-validator';
+import { UserRolesType, UserRoleValues } from '../types/user-role.type';
+import { UserStatusType, UserStatusValues } from '../types/user-status.type';
 
 export class CreateUserDTO {
   @IsString()
@@ -15,16 +15,16 @@ export class CreateUserDTO {
   @IsOptional()
   phone?: string;
 
-  @IsString()
-  @IsIn(UserRoleValues)
-  @IsOptional()
-  role?: UserRolesType = UserRoleEnum.USER;
-
-  @IsString()
-  @IsIn(UserStatusValues)
-  @IsOptional()
-  status?: UserStatusType = UserStatusEnum.DISABLED;
-
   @IsInt()
-  telegramId: string;
+  telegramId: number;
+
+  @IsIn(UserRoleValues)
+  @IsString()
+  @IsOptional()
+  role?: UserRolesType;
+
+  @IsIn(UserStatusValues)
+  @IsString()
+  @IsOptional()
+  status?: UserStatusType;
 }
