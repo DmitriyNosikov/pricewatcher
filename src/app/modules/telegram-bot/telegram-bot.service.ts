@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { Context, Telegraf } from 'telegraf';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -38,27 +38,32 @@ export class TelegramBotService {
     this.logger.info(`Получена команда /start`);
 
     const telegramInitiatorId = this.getTelegramId(ctx);
-    // const startPayload = ctx.payload;
+    const startPayload = ('payload' in ctx) ? ctx.payload : null;
     console.log('CONTEXT: ', ctx);
+    console.log('START PAYLOAD: ', startPayload);
   }
 
   public init(params?: TelegramBotParamsType) {
-    this.logger.info('Инициализация Телеграм-бота ...');
+    try {
+      this.logger.info('Инициализация Телеграм-бота ...');
 
-    this.telegramBot = new Telegraf(this.botAuthToken);
+      this.telegramBot = new Telegraf(this.botAuthToken);
 
-    if (!this.telegramBot || this.telegramBot === null) {
-      throw new Error('Не удалось создать инстанс класса Telegraf');
+      if (!this.telegramBot || this.telegramBot === null) {
+        throw new Error('Не удалось создать инстанс класса Telegraf');
+      }
+
+      // Назначаем обработчик для команды /start
+      this.telegramBot.start(this.handleStartCommand.bind(this));
+
+      // Enable graceful stop
+      process.once("SIGINT", () => this.telegramBot?.stop("SIGINT"));
+      process.once("SIGTERM", () => this.telegramBot?.stop("SIGTERM"));
+
+      this.logger.info(`Телеграм-бот успешно инициализирован`);
+    } catch (error) {
+      throw new BadGatewayException(`Не удалось инициализировать Telegram-бота. Ошибка: ${error.message}`);
     }
-
-    // Назначаем обработчик для команды /start
-    this.telegramBot.start(this.handleStartCommand.bind(this));
-
-    // Enable graceful stop
-    process.once("SIGINT", () => this.telegramBot?.stop("SIGINT"));
-    process.once("SIGTERM", () => this.telegramBot?.stop("SIGTERM"));
-
-    this.logger.info(`Телеграм-бот успешно инициализирован`);
   }
 
   private getTelegramId(ctx: Context) {
