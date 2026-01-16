@@ -1,4 +1,4 @@
-import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Context, Telegraf } from 'telegraf';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -7,6 +7,9 @@ import { ConfigService } from '@nestjs/config';
 import { TelegramBotRepository } from './telegram-bot.repository';
 import { TelegramBotParamsType } from './types/telegram-bot-init-data.type';
 import { ConfigEnvironment, TelegramConfigEnum } from '@core/config';
+import { EventEmitter2, EventEmitterReadinessWatcher } from '@nestjs/event-emitter';
+import { EventTypeEnum } from '@core/types/event.type';
+import { UserHandleTelegramBotStartPayloadType } from '../user/types/user-handlers.type';
 
 @Injectable()
 export class TelegramBotService {
@@ -17,7 +20,9 @@ export class TelegramBotService {
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger,
     private readonly configService: ConfigService,
-    private readonly telegramBotRepository: TelegramBotRepository
+    private readonly telegramBotRepository: TelegramBotRepository,
+    private readonly eventEmitterReadinessWatcher: EventEmitterReadinessWatcher,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.botAuthToken = configService.get<string>(
       `${ConfigEnvironment.TELEGRAM}.${TelegramConfigEnum.TELEGRAM_BOT_AUTH_TOKEN}`
@@ -29,18 +34,33 @@ export class TelegramBotService {
   }
 
   private async handleStartCommand(ctx: Context) {
-    const loggerPrefix = '[START COMMAND]';
-
-    this.logger.configure({
-      defaultMeta: loggerPrefix
-    });
-
     this.logger.info(`Получена команда /start`);
 
     const telegramInitiatorId = this.getTelegramId(ctx);
-    const startPayload = ('payload' in ctx) ? ctx.payload : null;
-    console.log('CONTEXT: ', ctx);
-    console.log('START PAYLOAD: ', startPayload);
+    const startPayload = ('payload' in ctx)
+      ? ctx.payload as string
+      : null;
+
+    if (!startPayload) {
+      const errorMessage = `Команда /start запущена без параметров: ${startPayload}`;
+
+      this.logger.warn(errorMessage);
+
+      return;
+    }
+
+    // Отправляем событие о начале работы с ботом
+    await this.eventEmitterReadinessWatcher.waitUntilReady();
+
+    const eventPayload: UserHandleTelegramBotStartPayloadType = {
+      telegramInitiatorId,
+      startPayload,
+    };
+
+    this.eventEmitter.emit(
+      EventTypeEnum.TELEGRAM_START,
+      eventPayload
+    );
   }
 
   public init(params?: TelegramBotParamsType) {

@@ -1,22 +1,27 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { FindOptions } from 'sequelize';
+import { BadRequestException, ConflictException, Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
+import { OnEvent } from '@nestjs/event-emitter';
 
-import { User, UserInterface } from '@core/db/models/user';
+import { User } from '@core/db/models/user';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 import { UserReposiroty } from './user.repository';
-import { IndexUserDTO } from './dto/index-user.dto';
-import { WithPaginationType } from '@core/types/with-pagination.type.';
-import { UserLimits } from './user.constant';
-import { OrderDirectionEnum } from '@core/types/search.type';
+
+import { WithPaginationType, OrderDirectionEnum, EventTypeEnum } from '@core/types';
+import { UserHandleTelegramBotStartPayloadType } from './types/user-handlers.type';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { IndexUserDTO } from './dto/index-user.dto';
+
+import { UserLimits } from './user.constant';
+
 
 const { LIMIT, OFFSET } = UserLimits;
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly logger: Logger = new Logger(),
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
     private readonly userRepository: UserReposiroty
   ) { }
   /*
@@ -104,5 +109,14 @@ export class UserService {
     await this.userRepository.softDelete(userId);
 
     this.logger.info(`Пользователь с id ${userId} успешно удален (soft)`);
+  }
+
+  @OnEvent(EventTypeEnum.TELEGRAM_START, { async: true })
+  private async handleTelegramBotStart(
+    payload: UserHandleTelegramBotStartPayloadType
+  ): Promise<void> {
+    console.log(payload);
+
+    this.logger.info(`Модулем 'User' перехвачено событие ${EventTypeEnum.TELEGRAM_START}. Payload: ${JSON.stringify(payload)}`);
   }
 }

@@ -11,6 +11,7 @@ import { getDbOPtions } from './config/db-options';
 import { TelegramBotModule } from './modules/telegram-bot/telegram-bot.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { UserModule } from './modules/user/user.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -36,6 +37,13 @@ import { UserModule } from './modules/user/user.module';
     SequelizeModule.forRootAsync(
       getDbOPtions(ConfigEnvironment.PG)
     ),
+
+    // Observer
+    EventEmitterModule.forRoot({
+      wildcard: true, // Разрешить использовать namespaces в названии эвентов
+      delimiter: '.', // Разделитель для namespace
+      newListener: true
+    }),
 
     // Модули
     WebhookModule,
